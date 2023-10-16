@@ -1,9 +1,10 @@
 library(tidyverse)
 library(vroom)
 library(tidymodels)
-library(ggmosaic)
 library(embed)
-setwd("./AmazonEmployeeAccess")
+library(ranger)
+library(doParallel)
+
 #112 columns
 
 amazonTrain <- vroom("./train.csv")
@@ -38,6 +39,12 @@ my_mod <- logistic_reg(mixture = tune(),
                        penalty = tune()) %>%
   set_engine("glmnet")
 
+# my_mod <- rand_forest(mtry = tune(),
+#                       min_n = tune(),
+#                       trees = 500) %>%
+#   set_engine("ranger") %>%
+#   set_mode("classification")
+
 amazon_workflow <- workflow() %>%
   add_recipe(my_recipe) %>%
   add_model(my_mod)
@@ -46,13 +53,28 @@ tuning_grid <- grid_regular(penalty(),
                             mixture(),
                             levels = 5)
 
-folds <- vfold_cv(amazonTrain, v = 10, repeats = 1)
+# my_mod <- rand_forest(mtry = tune(),
+#                       min_n = tune(),
+#                       trees = 500) %>%
+#   set_engine("ranger") %>%
+#   set_mode("classification")
+# 
+# amazon_workflow <- workflow() %>%
+#   add_recipe(my_recipe) %>%
+#   add_model(my_mod)
+# 
+# tuning_grid <- grid_regular(mtry(range = c(1,9)),
+#                             min_n(),
+#                             levels = 5)
 
+folds <- vfold_cv(amazonTrain, v = 10, repeats = 1)
+cl <- makePSOCKcluster(10)
+registerDoParallel(cl)
 CV_results <- amazon_workflow %>%
   tune_grid(resamples = folds,
             grid = tuning_grid,
             metrics = metric_set(roc_auc))
-
+stopCluster(cl)
 bestTune <- CV_results %>%
   select_best("roc_auc")
 
