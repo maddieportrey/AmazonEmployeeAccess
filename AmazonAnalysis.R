@@ -35,37 +35,27 @@ my_recipe <- recipe(ACTION~., data = amazonTrain) %>%
 # preds <- as.data.frame(preds)
 # vroom_write(preds, "amazon_predictions.csv", ",")
 
-my_mod <- logistic_reg(mixture = tune(),
-                       penalty = tune()) %>%
-  set_engine("glmnet")
+# my_mod <- logistic_reg(mixture = tune(),
+#                        penalty = tune()) %>%
+#   set_engine("glmnet")
 
-# my_mod <- rand_forest(mtry = tune(),
-#                       min_n = tune(),
-#                       trees = 500) %>%
-#   set_engine("ranger") %>%
-#   set_mode("classification")
+my_mod <- rand_forest(mtry = tune(),
+                      min_n = tune(),
+                      trees = 500) %>%
+  set_engine("ranger") %>%
+  set_mode("classification")
 
 amazon_workflow <- workflow() %>%
   add_recipe(my_recipe) %>%
   add_model(my_mod)
 
-tuning_grid <- grid_regular(penalty(),
-                            mixture(),
-                            levels = 5)
-
-# my_mod <- rand_forest(mtry = tune(),
-#                       min_n = tune(),
-#                       trees = 500) %>%
-#   set_engine("ranger") %>%
-#   set_mode("classification")
-# 
-# amazon_workflow <- workflow() %>%
-#   add_recipe(my_recipe) %>%
-#   add_model(my_mod)
-# 
-# tuning_grid <- grid_regular(mtry(range = c(1,9)),
-#                             min_n(),
+# tuning_grid <- grid_regular(penalty(),
+#                             mixture(),
 #                             levels = 5)
+
+tuning_grid <- grid_regular(mtry(range = c(1,9)),
+                            min_n(),
+                            levels = 5)
 
 folds <- vfold_cv(amazonTrain, v = 10, repeats = 1)
 cl <- makePSOCKcluster(10)
