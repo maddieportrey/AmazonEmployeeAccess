@@ -56,7 +56,7 @@ The following objects are masked from ‘package:readr’:
 ✖ dplyr::lag()      masks stats::lag()
 ✖ yardstick::spec() masks vroom::spec(), readr::spec()
 ✖ recipes::step()   masks stats::step()
-• Use tidymodels_prefer() to resolve common conflicts.
+• Learn how to get started at https://www.tidymodels.org/start/
 > library(embed)
 > library(ranger)
 > library(doParallel)
@@ -165,4 +165,4 @@ dbl (10): id, RESOURCE, MGR_ID, ROLE_ROLLUP_1, ROLE_ROLLUP_2, ROLE_DEPTNAME,...
 > 
 > proc.time()
    user  system elapsed 
- 81.188   1.627 653.284 
+122.039   3.600 940.973 
