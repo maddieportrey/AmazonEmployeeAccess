@@ -126,7 +126,7 @@ CV_results <- amazon_workflow %>%
 stopCluster(cl)
 bestTune <- CV_results %>%
   select_best("roc_auc")
-show_notes(.Last.tune.result)
+
 final_wf <- amazon_workflow %>%
   finalize_workflow(bestTune) %>%
   fit(data = amazonTrain)
