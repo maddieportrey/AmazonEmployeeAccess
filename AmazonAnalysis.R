@@ -117,13 +117,13 @@ tuning_grid <- grid_regular(mtry(range = c(1,9)),
                             levels = 5)
 
 folds <- vfold_cv(amazonTrain, v = 10, repeats = 1)
-cl <- makePSOCKcluster(10)
-registerDoParallel(cl)
+#cl <- makePSOCKcluster(10)
+#registerDoParallel(cl)
 CV_results <- amazon_workflow %>%
   tune_grid(resamples = folds,
             grid = tuning_grid,
             metrics = metric_set(roc_auc))
-stopCluster(cl)
+#stopCluster(cl)
 bestTune <- CV_results %>%
   select_best("roc_auc")
 
