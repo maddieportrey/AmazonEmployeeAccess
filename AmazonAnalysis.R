@@ -20,16 +20,16 @@
 # 
 # # my_mod <- logistic_reg() %>%
 # #   set_engine("glm")
-# # 
+# #
 # # amazon_workflow <- workflow() %>%
 # #   add_recipe(my_recipe) %>%
 # #   add_model(my_mod) %>%
 # #   fit(data = amazonTrain)
-# # 
-# # amazon_preds <- predict(amazon_workflow, 
+# #
+# # amazon_preds <- predict(amazon_workflow,
 # #                         new_data = amazonTest,
 # #                         type="prob")
-# # 
+# #
 # # preds <- cbind(amazonTest$id, amazon_preds$.pred_1)
 # # colnames(preds) <- c("Id","ACTION")
 # # preds <- as.data.frame(preds)
@@ -95,12 +95,15 @@ amazonTest <- vroom("./test.csv")
 amazonTrain$ACTION <- as.factor(amazonTrain$ACTION)
 
 my_recipe <- recipe(ACTION~., data = amazonTrain) %>%
-  step_mutate_at(all_numeric_predictors(), fn = factor) %>%
+  #step_mutate_at(all_numeric_predictors(), fn = factor) %>%
   step_dummy(all_nominal_predictors()) %>%
   step_normalize(all_predictors()) %>%
   step_pca(all_predictors(), threshold=.8) %>%
-  step_smote(all_outcomes(), neighbors = 5) %>%
+  #step_smote(all_outcomes(), neighbors = 5) %>%
   step_lencode_mixed(all_nominal_predictors(), outcome = vars(ACTION))
+
+prepped_recipe <- prep(my_recipe)
+baked <- bake(prepped_recipe, new_data = amazonTrain)
 
 my_mod <- rand_forest(mtry = tune(),
                       min_n = tune(),
@@ -112,18 +115,18 @@ amazon_workflow <- workflow() %>%
   add_recipe(my_recipe) %>%
   add_model(my_mod)
 
-tuning_grid <- grid_regular(mtry(range = c(1,9)),
+tuning_grid <- grid_regular(mtry(range = c(1,7)),
                             min_n(),
                             levels = 5)
 
 folds <- vfold_cv(amazonTrain, v = 10, repeats = 1)
-#cl <- makePSOCKcluster(10)
-#registerDoParallel(cl)
+cl <- makePSOCKcluster(10)
+registerDoParallel(cl)
 CV_results <- amazon_workflow %>%
   tune_grid(resamples = folds,
             grid = tuning_grid,
             metrics = metric_set(roc_auc))
-#stopCluster(cl)
+stopCluster(cl)
 bestTune <- CV_results %>%
   select_best("roc_auc")
 
