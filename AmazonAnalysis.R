@@ -95,11 +95,11 @@ amazonTest <- vroom("./test.csv")
 amazonTrain$ACTION <- as.factor(amazonTrain$ACTION)
 
 my_recipe <- recipe(ACTION~., data = amazonTrain) %>%
-  #step_mutate_at(all_numeric_predictors(), fn = factor) %>%
+  step_mutate_at(all_numeric_predictors(), fn = factor) %>%
   step_dummy(all_nominal_predictors()) %>%
   step_normalize(all_predictors()) %>%
-  step_pca(all_predictors(), threshold=.8) %>%
-  #step_smote(all_outcomes(), neighbors = 5) %>%
+  step_pca(all_predictors(), threshold=.9) %>%
+  step_smote(all_outcomes(), neighbors = 5) %>%
   step_lencode_mixed(all_nominal_predictors(), outcome = vars(ACTION))
 
 prepped_recipe <- prep(my_recipe)
@@ -115,11 +115,11 @@ amazon_workflow <- workflow() %>%
   add_recipe(my_recipe) %>%
   add_model(my_mod)
 
-tuning_grid <- grid_regular(mtry(range = c(1,7)),
+tuning_grid <- grid_regular(mtry(range = c(1,(ncol(baked)-1))),
                             min_n(),
-                            levels = 5)
+                            levels = 3)
 
-folds <- vfold_cv(amazonTrain, v = 10, repeats = 1)
+folds <- vfold_cv(amazonTrain, v = 3, repeats = 1)
 cl <- makePSOCKcluster(10)
 registerDoParallel(cl)
 CV_results <- amazon_workflow %>%
